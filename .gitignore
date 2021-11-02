@@ -8,3 +8,4 @@ __pycache__
 /.vscode
 /trained_models
 !/trained_models/.gitkeep
+output/

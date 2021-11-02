@@ -57,15 +57,9 @@ class DataSequence(Sequence):
 
         # if os.path.exists(label_file):
         self.anno = COCO(label_file)
-        
-        self.indexes = self.anno.anns.keys()
-
-        # self.list_indexes = list(self.indexes)
-        # print(type(self.indexes))
-        # with open(label_file, "r") as fp:
-        #     self.anno = json.load(fp)
-        # if shuffle:
-        #     random.shuffle(self.list_indexes)
+        self.indexes = list(self.anno.anns.keys())
+        if shuffle:
+            random.shuffle(self.indexes)
 
     def __len__(self):
         """
@@ -149,10 +143,10 @@ class DataSequence(Sequence):
     def load_data(self, img_folder, aid):
         momo_style = True # debug
 
-        ann = self.anno[aid]  # get one annotation.
-        print("aid",aid)
+        ann = self.anno.anns[aid]  # get one annotation.
+        # print("aid",aid)
         # Load image
-        img_name = self.anno.imgs[[ann['image_id']]['file_name']]
+        img_name = self.anno.imgs[ann['image_id']]['file_name']
         path = os.path.join(img_folder, img_name)
         image = cv2.imread(path)
 
@@ -180,7 +174,7 @@ class DataSequence(Sequence):
         # Generate visibility mask
         # visible = inside image + not occluded by simulated rectangle
         # (see BlazePose paper for more detail)
-        visibility = np.ones((landmark.shape[0], 1), dtype=int)
+        visibility = np.ones((landmark.shape[0]), dtype=int)
         vis_index = np.where(landmark[:,-1]>0)
         landmark[vis_index,-1] = 1
         visibility = landmark[:,-1]
@@ -264,7 +258,7 @@ class DataSequence(Sequence):
 
         # Concatenate visibility into landmark
         visibility = np.array(visibility)
-        visibility = visibility.reshape((landmark.shape[0], 1))
+        visibility = visibility.reshape((landmark.shape[0]))
         # landmark = np.hstack((landmark, visibility))
         landmark[:,3] = visibility
         landmark[:,4] = visibility

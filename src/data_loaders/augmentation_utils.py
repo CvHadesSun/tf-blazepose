@@ -1,3 +1,11 @@
+'''
+Author: your name
+Date: 2021-11-02 14:02:41
+LastEditTime: 2021-11-02 16:29:50
+LastEditors: Please set LastEditors
+Description: In User Settings Edit
+FilePath: /tf-blazepose/src/data_loaders/augmentation_utils.py
+'''
 import random
 import numpy as np
 import cv2
@@ -24,6 +32,8 @@ def add_vertical_reflection(image, keypoints, min_height=0.1):
 
     alpha = random.uniform(0.5, 0.9)
     beta = (1.0 - alpha)
+    max_y=int(max_y)
+    reflection_height=int(reflection_height)
     image[max_y:max_y+reflection_height, :, :] = cv2.addWeighted(image[max_y:max_y+reflection_height, :, :],
                                                                  alpha,
                                                                  cv2.flip(
