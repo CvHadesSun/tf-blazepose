@@ -9,15 +9,15 @@
         "val_labels":                   "data/mpii/val.json",
         "test_images":                  "data/mpii/images/",
         "test_labels":                  "data/mpii/test.json",
-        "symmetry_point_ids":           [[12, 13], [10, 15], [11, 14], [2, 3], [1, 4], [0, 5]]
+        "symmetry_point_ids":           [[1, 2], [3, 4], [5, 6], [7, 8], [9, 20], [11, 12],[13,14],[15,16]]
     },                   
     "model" : {
         "im_width":                     256,
         "im_height":                    256,
-        "heatmap_width":                128,
-        "heatmap_height":               128,
+        "heatmap_width":                64,
+        "heatmap_height":               64,
         "heatmap_kp_sigma":             4,
-        "num_keypoints":                7,
+        "num_keypoints":                19,
         "model_type":                  "SIGMOID_HEATMAP_LINEAR_REGRESS_TWO_HEAD"
     },
     "train": {

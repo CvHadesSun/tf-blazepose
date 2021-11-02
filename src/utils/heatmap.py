@@ -48,7 +48,7 @@ def gen_point_heatmap(img, pt, sigma, type='Gaussian'):
     return img
 
 
-def gen_gt_heatmap(keypoints, sigma, heatmap_size):
+def gen_gt_heatmap(keypoints, vis,sigma, heatmap_size):
     """Generate groundtruth heatmap
 
     Args:
@@ -66,7 +66,8 @@ def gen_gt_heatmap(keypoints, sigma, heatmap_size):
             continue
         is_visible = True
         if len(keypoints[0]) > 2:
-            visibility = keypoints[i, 2]
+            # visibility = keypoints[i, 2]
+            visibility = vis[i]
             if visibility <= 0:
                 is_visible = False
         gtmap[:, :, i] = gen_point_heatmap(
