@@ -1,3 +1,11 @@
+'''
+Author: your name
+Date: 2021-11-03 16:34:06
+LastEditTime: 2021-11-03 16:36:38
+LastEditors: your name
+Description: In User Settings Edit
+FilePath: /tf-blazepose/src/utils/visualizer.py
+'''
 import cv2
 
 
@@ -21,8 +29,8 @@ def visualize_keypoints(image, keypoints, visibility=None, edges=None, point_col
             tmp_point_color = (100, 100, 100)
         draw = cv2.circle(draw, center=(int(x), int(y)),
                           color=tmp_point_color, radius=5, thickness=-1)
-        draw = cv2.putText(draw, str(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX,
-                           0.5, text_color, 1, cv2.LINE_AA)
+        # draw = cv2.putText(draw, str(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX,
+        #                    0.5, text_color, 1, cv2.LINE_AA)
 
     if edges is not None and visibility is not None:
         for edge_chain in edges:
