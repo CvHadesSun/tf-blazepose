@@ -91,7 +91,7 @@ class DataSequence(Sequence):
         for id in batch_data:
 
             # Load and augment data
-            image, landmark, heatmap,segmentation,pose_flag = self.load_data_v2(self.image_folder, id)
+            image, landmark, heatmap,segmentation,pose_flag = self.load_data_v3(self.image_folder, id)
 
             batch_image.append(image)
             batch_landmark_2d.append(landmark)
@@ -107,7 +107,7 @@ class DataSequence(Sequence):
         if self.output_heatmap:
             batch_heatmap = np.array(batch_heatmap)
 
-        batch_image = DataSequence.preprocess_images_v2(batch_image)
+        batch_image = DataSequence.preprocess_images(batch_image)
         batch_landmark = self.preprocess_landmarks(batch_landmark)
 
         # Prevent values from going outside [0, 1]
@@ -145,8 +145,11 @@ class DataSequence(Sequence):
     def preprocess_landmarks(self, landmarks):
 
         first_dim = landmarks.shape[0]
-        landmarks = landmarks.reshape((-1, 5))
-        # landmarks = normalize_landmark(landmarks, self.input_size)
+        try:
+            landmarks = landmarks.reshape((-1, 5))
+        except:
+            landmarks = landmarks.reshape((-1, 3))
+        landmarks = normalize_landmark(landmarks, self.input_size)
         landmarks = landmarks.reshape((first_dim, -1))
         return landmarks
 
@@ -287,7 +290,7 @@ class DataSequence(Sequence):
 
         joints = []
         segmentation = []
-
+        score=ann['pose_flag']
         # Load landmark and apply square cropping for image
         if 'keypoints' in ann:
             joints = ann['keypoints']  
@@ -394,12 +397,135 @@ class DataSequence(Sequence):
         # cv2.waitKey(0)
 
         # return image, landmark, gtmap
-        score = self._scoring(visibility)
+        # score = self._scoring(visibility)
+
         return image,landmark,gtmap,segmentation,score
     def _scoring(self,vis):
         score = vis.astype(np.bool).sum()
         return score
+    def load_data_v3(self, img_folder, aid):
+        # momo_style = True # debug
 
+        ann = self.anno.anns[aid]  # get one annotation.
+        # Load image
+        img_name = self.anno.imgs[ann['image_id']]['file_name']
+        path = os.path.join(img_folder, img_name)
+        image = cv2.imread(path)
+
+        joints = []
+        # segmentation = []
+
+        # Load landmark and apply square cropping for image
+        if 'keypoints' in ann:
+            joints = ann['keypoints']  
+        # if 'segmentation' in ann:
+        #     segmentation = ann['segmentation']
+        bbox = ann['bbox']   # bbox
+        landmark = np.array(joints).reshape([-1,3]) #  coco format.
+
+        # Convert all (-1, -1) to (0, 0)
+        for i in range(landmark.shape[0]):
+            if landmark[i][0] == -1 and landmark[i][1] == -1:
+                landmark[i, :] = [0, 0]
+
+        # Generate visibility mask
+        # visible = inside image + not occluded by simulated rectangle
+        # (see BlazePose paper for more detail)
+        visibility = np.ones((landmark.shape[0]), dtype=int)
+        vis_index = np.where(landmark[:,-1]>0)
+        landmark[vis_index,-1] = 1
+        visibility = landmark[:,-1]
+    
+        for i in range(len(visibility)):
+            if 0 > landmark[i][0] or landmark[i][0] >= image.shape[1] \
+                or 0 > landmark[i][1] or landmark[i][1] >= image.shape[0]:
+                visibility[i] = 0
+
+        # if momo_style:
+        # recostruct the landmarks.
+        np_landmark = np.zeros([landmark.shape[0],5])
+        np_landmark[:,:2] = landmark[:,:2]  # x,y
+        np_landmark[:,2] = landmark[:,0]  #z=x
+        np_landmark[:,3] = visibility
+        np_landmark[:,4] = visibility
+        # 
+        # scale = [1.,1.]
+        bbox= self._compute_bbox(np_landmark[-2],np_landmark[-1]) # square box
+        rotation = get_rotation(np_landmark[-2, :2], np_landmark[-1, :2])
+        ad_bbox = adjust_bbox(bbox, rotation)
+        trans = get_transform_matrix(ad_bbox, rotation, [self.input_size[0], self.input_size[1]])
+        image = cv2.warpPerspective(image, trans, (self.input_size[1], self.input_size[0]),
+                                        flags=cv2.INTER_LINEAR)  # padding zeros
+        landmark, visibility = affine_joints(np_landmark, visibility, trans, [self.input_size[0], self.input_size[1]])
+        
+        # if len(segmentation) > 0:
+        #     segmentation = affine_segmentation(segmentation, trans)
+        
+        # assign 
+        bbox = ad_bbox
+
+        # augmentation.
+        # Horizontal flip
+        # and update the order of landmark points
+        if self.random_flip and random.choice([0, 1]):
+            image = cv2.flip(image, 1)
+
+            # Mark missing keypoints
+            missing_idxs = []
+            for i in range(landmark.shape[0]):
+                if landmark[i, 0] == 0 and landmark[i, 1] == 0:
+                    missing_idxs.append(i)
+
+            # Flip landmark
+            landmark[:, 0] = self.input_size[0] - landmark[:, 0]
+
+            # Restore missing keypoints
+            for i in missing_idxs:
+                landmark[i, 0] = 0
+                landmark[i, 1] = 0
+
+            # Change the indices of landmark points and visibility
+            if self.symmetry_point_ids is not None:
+                for p1, p2 in self.symmetry_point_ids:
+                    l = landmark[p1, :].copy()
+                    landmark[p1, :] = landmark[p2, :].copy()
+                    landmark[p2, :] = l
+
+        if self.augment:
+            image, landmark[:,:2] = augment_img(image, landmark[:,:2])
+
+        # Random occlusion
+        # (see BlazePose paper for more detail)
+        if self.augment and random.random() < 0.2:
+            # landmark = landmark.reshape(-1, 2)
+            image, visibility = random_occlusion(image, landmark[:,:2], visibility=visibility,
+                                                 rect_ratio=((0.2, 0.5), (0.2, 0.5)), rect_color="random")
+
+        visibility = np.array(visibility)
+        visibility = visibility.reshape((landmark.shape[0]))
+        landmark[:,3] = visibility
+        landmark[:,4] = visibility
+        
+        # Generate heatmap
+        gtmap = None
+        if self.output_heatmap:
+            gtmap_kps = landmark[:,:2].copy()
+            gtmap_kps[:, :2] = (np.array(gtmap_kps[:, :2]).astype(float)
+                                * np.array(self.heatmap_size) / np.array(self.input_size)).astype(int)
+            gtmap = gen_gt_heatmap(
+                gtmap_kps,visibility, self.heatmap_sigma, self.heatmap_size)
+            # gtmap = np.clip(np.sum(gtmap, axis=2, keepdims=True), None, 1)
+
+        # Uncomment following lines to debug augmentation
+        if self.debug:
+            draw = visualize_keypoints(image, landmark, visibility, text_color=(0,0,255))
+            cv2.imwrite('/home/hades/dongmi_projects/tf-blazepose/output/gt_{}.jpg'.format(aid),draw)
+        # if self.output_heatmap:
+        #     cv2.imwrite('/home/hades/dongmi_projects/tf-blazepose/output/gt_{}.jpg'.format(aid),gtmap.sum(axis=2)*255)
+        #     cv2.imshow("gtmap", gtmap.sum(axis=2))
+        # cv2.waitKey(0)
+
+        return image,landmark[:,:3],gtmap,[],0
     def _compute_bbox(self, center,top_head):
         # center = joints[-2]
         # top_head = joints[-1]

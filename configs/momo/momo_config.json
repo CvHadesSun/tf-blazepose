@@ -1,0 +1,40 @@
+{
+    "experiment_name":                  "momo_train_heatmap",
+    "trainer":                          "blazepose_trainer",
+    "data_loader":                      "momo_pose",      
+    "data": {   
+        "train_images":                 "/home/hades/coco/train2017",
+        "train_labels":                 "/home/hades/dongmi_projects/Pose2D-benchmark/data/momo_train.json",
+        "val_images":                   "/home/hades/coco/val2017",
+        "val_labels":                   "/home/hades/dongmi_projects/Pose2D-benchmark/data/momo_.json",
+        "test_images":                  "/home/hades/coco/val2017",
+        "test_labels":                  "/home/hades/dongmi_projects/Pose2D-benchmark/data/momo_.json",
+        "symmetry_point_ids":           [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12],[13,14],[15,16]]
+    },                   
+    "model" : {
+        "im_width":                     256,
+        "im_height":                    256,
+        "heatmap_width":                128,
+        "heatmap_height":               128,
+        "heatmap_kp_sigma":             4,
+        "num_keypoints":                19,
+        "model_type":                  "SIGMOID_HEATMAP_SIGMOID_REGRESS_TWO_HEAD"
+    },
+    "train": {
+        "train_phase":                  "HEATMAP",
+        "heatmap_loss":                 "binary_crossentropy",
+        "keypoint_loss":                "huber",
+        "loss_weights":                 {"heatmap": 1.0, "joints": 0.0},
+        "train_batch_size":             64,
+        "val_batch_size":               64,
+        "nb_epochs":                    1000,
+        "learning_rate":                1e-3,
+        "load_weights":                 false,
+        "pretrained_weights_path":      "",
+        "initial_epoch":                0
+    },
+    "test": {
+        "pck_ref_points_idxs" :         [8, 9],
+        "pck_thresh":                   0.5
+    }
+}
