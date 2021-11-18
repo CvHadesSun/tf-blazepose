@@ -140,11 +140,11 @@ class BlazePose():
         # seg_branch = self.seg_branch_c(self.seg_branch_a(y0) + self.seg_branch_b(y))
         # output_segmentation = self.seg_head(seg_branch)
 
-        # if model_type == "TWO_HEAD":  # Stop gradient for regression on 2-head model
-        #     y = tf.keras.backend.stop_gradient(y)
-        #     y2 = tf.keras.backend.stop_gradient(y2)
-        #     y3 = tf.keras.backend.stop_gradient(y3)
-        #     y4 = tf.keras.backend.stop_gradient(y4)
+        if model_type == "TWO_HEAD":  # Stop gradient for regression on 2-head model
+            y = tf.keras.backend.stop_gradient(y)
+            y2 = tf.keras.backend.stop_gradient(y2)
+            y3 = tf.keras.backend.stop_gradient(y3)
+            y4 = tf.keras.backend.stop_gradient(y4)
 
         # ---------- regression branch ----------
         x = self.conv12a(y) + self.conv12b(y2)
@@ -158,7 +158,6 @@ class BlazePose():
         ld_3d = self.ld_3d_head(x)
         # world_3d = self.world_3d_head(x) #
         output_poseflag = self.poseflag_head(x)
-        heatmap = self.heatmap_head(y)
 
         # print(heatmap)
         # return  ld_3d, world_3d, output_poseflag, heatmap
@@ -203,6 +202,7 @@ def load_weight_(model, saved_model):
         try:
             v.assign(model_ori_weight[v.name])
         except:
+            print("no restored layer:",v.name)
             continue
     return model
 

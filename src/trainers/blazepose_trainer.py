@@ -11,7 +11,8 @@ from ..models import ModelCreator
 from .losses import euclidean_distance_loss, focal_tversky, focal_loss, get_huber_loss, get_wing_loss
 from ..metrics.pck import get_pck_metric
 from ..metrics.mae import get_mae_metric
-
+from ..models.blazepose_lite import load_weight_
+from src import models
 def train(config):
     """Train model
 
@@ -34,6 +35,18 @@ def train(config):
 
     # # Freeze regression branch when training heatmap
     train_phase = TrainPhase(train_config.get("train_phase", "UNKNOWN"))
+    last_layer_name=['heatmap','sequential_62']
+
+    # finetune last layer
+    for layer in model.layers:
+        if not layer.name  in last_layer_name:
+            layer.trainable = False
+    
+
+    print('='*50)
+    for layer in model.layers:
+        print(layer.name,'-'*20,layer.trainable )
+    print('='*50)
     # if train_phase == train_phase.HEATMAP:
     #     print("Freeze these layers:")
     #     for layer in model.layers:
@@ -82,7 +95,8 @@ def train(config):
     if train_config["load_weights"]:
         print("Loading model weights: " +
               train_config["pretrained_weights_path"])
-        model.load_weights(train_config["pretrained_weights_path"])
+        # model.load_weights(train_config["pretrained_weights_path"])
+        model=load_weight_(model,train_config["pretrained_weights_path"])
 
     # Create experiment folder
     exp_path = os.path.join("experiments/{}".format(config["experiment_name"]))
@@ -317,6 +331,8 @@ def load_model(config, model_path):
     # Initialize model and load weights
     model = ModelCreator.create_model(model_config["model_type"], model_config["num_keypoints"])
     model.compile()
-    model.load_weights(model_path)
+    # model.load_weights(model_path)
+    model=load_weight_(model,model_path)
+    
 
     return model

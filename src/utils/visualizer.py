@@ -1,7 +1,7 @@
 '''
 Author: your name
 Date: 2021-11-03 16:34:06
-LastEditTime: 2021-11-04 15:23:58
+LastEditTime: 2021-11-18 15:06:21
 LastEditors: Please set LastEditors
 Description: In User Settings Edit
 FilePath: /tf-blazepose/src/utils/visualizer.py
@@ -20,18 +20,23 @@ def visualize_keypoints(image, keypoints, visibility=None, edges=None, point_col
     Returns:
         Visualized image
     """
-
     draw = image.copy()
-    for i, p in enumerate(keypoints):
+    # for i, p in enumerate(keypoints[:-2,:]):
+    #     x, y = p[0], p[1]
+    #     tmp_point_color = point_color
+    #     if visibility is not None and not int(visibility[i]):
+    #         tmp_point_color = (100, 100, 100)
+    #     draw = cv2.circle(draw, center=(int(x), int(y)),
+    #                       color=tmp_point_color, radius=2, thickness=-1)
+    #     # draw = cv2.putText(draw, str(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX,
+    #     #                    0.5, text_color, 1, cv2.LINE_AA)
+    for i, p in enumerate(keypoints[-1:,:]):
         x, y = p[0], p[1]
         tmp_point_color = point_color
         if visibility is not None and not int(visibility[i]):
-            tmp_point_color = (100, 100, 100)
+            tmp_point_color = (0, 0, 255)
         draw = cv2.circle(draw, center=(int(x), int(y)),
                           color=tmp_point_color, radius=2, thickness=-1)
-        # draw = cv2.putText(draw, str(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX,
-        #                    0.5, text_color, 1, cv2.LINE_AA)
-
     if edges is not None and visibility is not None:
         for edge_chain in edges:
             for i in range(len(edge_chain) - 1):

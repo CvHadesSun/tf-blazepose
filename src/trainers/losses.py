@@ -123,6 +123,7 @@ def get_huber_loss(delta=1.0, weights=(1.0, 100.0)):
     ' https://en.wikipedia.org/wiki/Huber_loss
     '''
     def huber_loss(y_true, y_pred, clip_delta=delta, weights=weights):
+        # print(y_pred.shape)
         error = y_true - y_pred
         cond  = tf.keras.backend.abs(error) < clip_delta
         squared_loss = 0.5 * tf.keras.backend.square(error)

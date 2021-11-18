@@ -4,11 +4,11 @@
     "data_loader":                      "momo_pose",      
     "data": {   
         "train_images":                 "/home/hades/coco/train2017",
-        "train_labels":                 "/home/hades/dongmi_projects/Pose2D-benchmark/data/momo_train.json",
+        "train_labels":                 "/home/hades/dongmi_projects/Pose2D-benchmark-new/data/momo_train.json",
         "val_images":                   "/home/hades/coco/val2017",
-        "val_labels":                   "/home/hades/dongmi_projects/Pose2D-benchmark/data/momo_.json",
+        "val_labels":                   "/home/hades/dongmi_projects/Pose2D-benchmark-new/data/momo_.json",
         "test_images":                  "/home/hades/coco/val2017",
-        "test_labels":                  "/home/hades/dongmi_projects/Pose2D-benchmark/data/momo_.json",
+        "test_labels":                  "/home/hades/dongmi_projects/Pose2D-benchmark-new/data/momo_.json",
         "symmetry_point_ids":           [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12],[13,14],[15,16]]
     },                   
     "model" : {
@@ -17,20 +17,20 @@
         "heatmap_width":                64,
         "heatmap_height":               64,
         "heatmap_kp_sigma":             4,
-        "num_keypoints":                39,
+        "num_keypoints":                19,
         "model_type":                  "SIGMOID_HEATMAP_SIGMOID_REGRESS_TWO_HEAD"
     },
     "train": {
         "train_phase":                  "HEATMAP",
         "heatmap_loss":                 "binary_crossentropy",
         "keypoint_loss":                "huber",
-        "loss_weights":                 {"heatmap": 1.0, "sequential_62": 0.0},
+        "loss_weights":                 {"heatmap": 0.5, "sequential_62": 0.5},
         "train_batch_size":             64,
         "val_batch_size":               64,
-        "nb_epochs":                    1000,
-        "learning_rate":                1e-3,
-        "load_weights":                 false,
-        "pretrained_weights_path":      "",
+        "nb_epochs":                    100,
+        "learning_rate":                1e-5,
+        "load_weights":                 true,
+        "pretrained_weights_path":      "models/output",
         "initial_epoch":                0
     },
     "test": {

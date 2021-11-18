@@ -109,6 +109,7 @@ class DataSequence(Sequence):
 
         batch_image = DataSequence.preprocess_images(batch_image)
         batch_landmark = self.preprocess_landmarks(batch_landmark)
+        # batch_landmark=batch_landmark.reshape(-1,1,)
 
         # Prevent values from going outside [0, 1]
         # Only applied for sigmoid output
@@ -151,7 +152,18 @@ class DataSequence(Sequence):
         except:
             landmarks = landmarks.reshape((-1, 3))
         landmarks = normalize_landmark(landmarks, self.input_size)
-        landmarks = landmarks.reshape((first_dim, -1))
+        landmarks = landmarks.reshape((first_dim,1, -1))
+        return landmarks
+        
+    def preprocess_landmarks_v2(self, landmarks):
+
+        first_dim = landmarks.shape[0]
+        # try:
+        #     landmarks = landmarks.reshape((-1, 5))
+        # except:
+        #     landmarks = landmarks.reshape((-1, 3))
+        # landmarks = normalize_landmark(landmarks, self.input_size)
+        landmarks = landmarks.reshape((first_dim,1,-1))
         return landmarks
 
     def load_data(self, img_folder, aid):
@@ -186,7 +198,8 @@ class DataSequence(Sequence):
         vis_index = np.where(landmark[:,-1]>0)
         landmark[vis_index,-1] = 1
         visibility = landmark[:,-1]
-    
+        # print(visibility)
+        # print('-'*50)
         for i in range(len(visibility)):
             if 0 > landmark[i][0] or landmark[i][0] >= image.shape[1] \
                 or 0 > landmark[i][1] or landmark[i][1] >= image.shape[0]:
@@ -195,6 +208,7 @@ class DataSequence(Sequence):
         # if momo_style:
         # recostruct the landmarks.
         np_landmark = np.zeros([landmark.shape[0],5])
+
         np_landmark[:,:2] = landmark[:,:2]  # x,y
         np_landmark[:,2] = landmark[:,0]  #z=x
         np_landmark[:,3] = visibility
