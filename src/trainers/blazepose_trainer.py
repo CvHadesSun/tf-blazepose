@@ -34,25 +34,25 @@ def train(config):
 
     # # Freeze regression branch when training heatmap
     train_phase = TrainPhase(train_config.get("train_phase", "UNKNOWN"))
-    if train_phase == train_phase.HEATMAP:
-        print("Freeze these layers:")
-        for layer in model.layers:
-            if layer.name.startswith("regression"):
-                print(layer.name)
-                layer.trainable = False
-    # Freeze heatmap branch when training regression
-    elif train_phase == train_phase.REGRESSION:
-        print("Freeze these layers:")
-        for layer in model.layers:
-            if not layer.name.startswith("regression"):
-                print(layer.name)
-                layer.trainable = False
+    # if train_phase == train_phase.HEATMAP:
+    #     print("Freeze these layers:")
+    #     for layer in model.layers:
+    #         if layer.name.startswith("regression"):
+    #             print(layer.name)
+    #             layer.trainable = False
+    # # Freeze heatmap branch when training regression
+    # elif train_phase == train_phase.REGRESSION:
+    #     print("Freeze these layers:")
+    #     for layer in model.layers:
+    #         if not layer.name.startswith("regression"):
+    #             print(layer.name)
+    #             layer.trainable = False
 
     # print(model.summary())
 
     loss_functions = {
         "heatmap": train_config["heatmap_loss"],
-        "joints": train_config["keypoint_loss"]
+        "sequential_62": train_config["keypoint_loss"]
     }
     
     # Replace all names with functions for custom losses
@@ -74,9 +74,10 @@ def train(config):
     hm_mae_metric = get_mae_metric()(name="mae1")
     kp_pck_metric = get_pck_metric(ref_point_pair=test_config["pck_ref_points_idxs"], thresh=test_config["pck_thresh"])(name="pck2")
     kp_mae_metric = get_mae_metric()(name="mae2")
+    # model.compile(optimizer=tf.optimizers.SGD(train_config["learning_rate"], momentum=0.9),
+    #               loss=loss_functions, loss_weights=loss_weights, metrics={"heatmap": [hm_pck_metric, hm_mae_metric], "sequential_62": [kp_pck_metric, kp_mae_metric]})
     model.compile(optimizer=tf.optimizers.SGD(train_config["learning_rate"], momentum=0.9),
-                  loss=loss_functions, loss_weights=loss_weights, metrics={"heatmap": [hm_pck_metric, hm_mae_metric], "joints": [kp_pck_metric, kp_mae_metric]})
-
+                  loss=loss_functions, loss_weights=loss_weights)
     # Load pretrained model
     if train_config["load_weights"]:
         print("Loading model weights: " +

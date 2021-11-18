@@ -91,7 +91,7 @@ class DataSequence(Sequence):
         for id in batch_data:
 
             # Load and augment data
-            image, landmark, heatmap,segmentation,pose_flag = self.load_data_v3(self.image_folder, id)
+            image, landmark, heatmap,segmentation,pose_flag = self.load_data(self.image_folder, id)
 
             batch_image.append(image)
             batch_landmark_2d.append(landmark)
@@ -117,7 +117,8 @@ class DataSequence(Sequence):
             batch_landmark[batch_landmark > 1] = 1
 
         if self.output_heatmap:
-            return batch_image, [batch_landmark, batch_heatmap]
+            # return batch_image, [batch_landmark, batch_posflag,batch_heatmap]
+            return batch_image, [batch_landmark,batch_heatmap]
         elif self.output_poseflag:
             return batch_image, [batch_landmark, batch_heatmap,batch_segms,batch_posflag]
         else:

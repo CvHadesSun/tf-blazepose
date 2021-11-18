@@ -3,6 +3,7 @@ from .blazepose_full import BlazePose as BlazePoseFull
 from .blazepose_all_linear import BlazePose as BlazePoseAllLinear
 from .blazepose_with_pushup_classify import BlazePose as BlazePoseWithClassify
 from .pushup_recognition import PushUpRecognition
+from .blazepose_lite import BlazePose as BlazePoseLite
 
 class ModelCreator():
 
@@ -10,7 +11,7 @@ class ModelCreator():
     def create_model(model_name, n_points=0):
 
         if model_name == "SIGMOID_HEATMAP_SIGMOID_REGRESS_TWO_HEAD":
-            return BlazePoseLegacy(n_points).build_model("TWO_HEAD")
+            return BlazePoseLite(n_points).build_model("TWO_HEAD")
         elif model_name == "SIGMOID_HEATMAP_SIGMOID_REGRESS_HEATMAP":
             return BlazePoseLegacy(n_points).build_model("HEATMAP")
         elif model_name == "SIGMOID_HEATMAP_SIGMOID_REGRESS_REGRESSION":
